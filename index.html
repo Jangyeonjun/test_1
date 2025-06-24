@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정보처리기사 실기 퀴즈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .chapter-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .chapter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+            border-width: 2px;
+        }
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .disabled {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto overflow-hidden">
+        
+        <!-- 단원 선택 화면 -->
+        <div id="chapter-selection-screen">
+            <header class="p-6 bg-indigo-600 text-white">
+                <h1 class="text-2xl font-bold">정보처리기사 실기 퀴즈</h1>
+                <p class="text-indigo-200 mt-1">학습할 단원을 선택하세요.</p>
+            </header>
+            <main id="chapter-list" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- JavaScript로 단원 버튼 생성 -->
+            </main>
+        </div>
+
+        <!-- 퀴즈 화면 -->
+        <div id="quiz-screen" class="hidden">
+            <header class="p-6 bg-indigo-600 text-white">
+                <h1 id="quiz-header-title" class="text-2xl font-bold"></h1>
+                <div class="flex justify-between items-center mt-2">
+                    <p id="progress-text" class="text-indigo-200"></p>
+                    <button id="back-to-chapters-btn" class="text-sm bg-white/20 hover:bg-white/30 px-3 py-1 rounded-md">단원 선택</button>
+                </div>
+            </header>
+            <main class="p-6">
+                <div id="question-container">
+                    <p id="question-text" class="text-lg font-semibold leading-relaxed mb-6"></p>
+                    <div id="options-container" class="space-y-3">
+                        <!-- JavaScript로 보기 버튼 생성 -->
+                    </div>
+                </div>
+                <div id="feedback-container" class="mt-6">
+                    <p id="feedback-text" class="text-base font-bold min-h-[24px]"></p>
+                </div>
+                <button id="next-question-btn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg mt-4 hover:bg-indigo-700 transition-colors hidden">
+                    다음 문제
+                </button>
+            </main>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="hidden">
+            <header class="p-6 bg-indigo-600 text-white">
+                <h1 class="text-2xl font-bold">퀴즈 결과</h1>
+            </header>
+            <main class="p-8 text-center">
+                <p class="text-xl mb-2">수고하셨습니다!</p>
+                <p id="score-text" class="text-4xl font-bold text-indigo-600 mb-8"></p>
+                <div class="flex gap-4">
+                    <button id="restart-quiz-btn" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                        다시 풀기
+                    </button>
+                    <button id="go-to-chapters-btn" class="flex-1 bg-slate-200 text-slate-800 font-bold py-3 rounded-lg hover:bg-slate-300 transition-colors">
+                        단원 선택
+                    </button>
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                "chapter": "응용 SW 기초 기술 활용",
+                "exams": [
+                    { "exam": "컴퓨터의 하드웨어를 쉽게 사용할 수 있도록 인터페이스를 제공해주며, 사용자 편의성과 자원 관리를 담당하는 핵심 소프트웨어는?", "answer": "운영체제" },
+                    { "exam": "마이크로소프트사가 개발하여 그래픽 기반의 편리한 인터페이스를 제공하지만, 소스 코드가 공개되지 않은 운영체제는?", "answer": "윈도우" },
+                    { "exam": "유닉스 호환 커널을 기반으로 개발된 오픈소스 운영체제로, 자유로운 수정 및 재배포가 가능한 것은?", "answer": "리눅스" },
+                    { "exam": "애플사가 개발한 유닉스 기반의 운영체제로, 자사 제품에만 탑재되는 그래픽 중심의 운영체제는?", "answer": "맥OS" },
+                    { "exam": "프로그램 실행 시 필요한 메모리를 할당하고, 실행이 종료되면 해당 메모리를 반환하여 관리하는 운영체제의 기능은?", "answer": "메모리 관리" },
+                    { "exam": "컴퓨터에서 현재 실행 중인 프로그램(프로세스)들을 관리하고 스케줄링하는 운영체제의 기능은?", "answer": "프로세스 관리" },
+                    { "exam": "하나의 물리적인 하드웨어 자원을 논리적으로 분할하여 여러 개의 가상 머신(VM)처럼 사용하거나, 여러 자원을 하나로 통합하여 사용하는 기술은?", "answer": "가상화" },
+                    { "exam": "인터넷을 통해 서버, 스토리지, 소프트웨어 등의 컴퓨팅 자원을 필요할 때마다 빌려 쓰는 서비스 모델은?", "answer": "클라우드" },
+                    { "exam": "클라우드 제공업체가 소프트웨어를 웹 브라우저를 통해 제공하여, 사용자가 별도의 설치 없이 로그인만으로 이용하는 서비스 형태는?", "answer": "SaaS" },
+                    { "exam": "클라우드 제공업체가 개발에 필요한 플랫폼(OS, 미들웨어 등)을 제공하여, 사용자가 애플리케이션 개발에만 집중할 수 있도록 하는 서비스는?", "answer": "PaaS" },
+                    { "exam": "서버, 스토리지, 네트워크 등의 IT 인프라 자원을 클라우드를 통해 빌려 쓰는 서비스로, 사용자가 직접 OS부터 관리할 수 있는 모델은?", "answer": "IaaS" },
+                    { "exam": "데이터의 추가, 변경, 검색, 삭제 등 데이터 관리를 위한 다양한 기능을 제공하는 시스템 소프트웨어는?", "answer": "DBMS" },
+                    { "exam": "데이터를 2차원 테이블(Table) 형태로 표현하고, 테이블 간의 관계를 이용하여 데이터를 관리하는 데이터베이스 시스템은?", "answer": "RDBMS" },
+                    { "exam": "데이터베이스의 구조를 시각적으로 표현하기 위해 개체(Entity), 속성(Attribute), 관계(Relationship)를 사용하여 만든 다이어그램은?", "answer": "ERD" },
+                    { "exam": "ERD에서 사각형으로 표현하며, 데이터로 관리하고자 하는 실체나 개념적 대상을 의미하는 것은?", "answer": "개체" },
+                    { "exam": "ERD에서 개체가 가지고 있는 고유한 특성이나 상태를 나타내며, 타원형으로 표현되는 것은?", "answer": "속성" },
+                    { "exam": "ERD에서 개체들 간의 연관성을 나타내며, 주로 마름모나 선으로 표현하는 것은?", "answer": "관계" },
+                    { "exam": "데이터의 중복을 최소화하고, 데이터의 일관성 및 무결성을 확보하기 위해 테이블 구조를 개선하는 과정은?", "answer": "정규화" },
+                    { "exam": "SQL에서 테이블이나 데이터베이스와 같은 새로운 객체를 생성하는 명령어는?", "answer": "Create" },
+                    { "exam": "SQL에서 이미 생성된 데이터베이스 객체의 구조를 변경하는 명령어는?", "answer": "Alter" },
+                    { "exam": "SQL에서 테이블과 같은 데이터베이스 객체를 완전히 삭제하는 명령어는?", "answer": "Drop" },
+                    { "exam": "SQL에서 테이블에 저장된 데이터 중 특정 조건에 맞는 데이터를 조회하는 명령어는?", "answer": "Select" },
+                    { "exam": "SQL에서 테이블에 새로운 행(데이터)을 추가하는 명령어는?", "answer": "Insert" },
+                    { "exam": "SQL에서 테이블의 특정 조건에 맞는 행(데이터)을 삭제하는 명령어는?", "answer": "Delete" },
+                    { "exam": "SQL에서 테이블의 특정 조건에 맞는 행(데이터)의 값을 수정하는 명령어는?", "answer": "Update" },
+                    { "exam": "SQL에서 데이터베이스 사용자에게 특정 작업에 대한 권한을 부여하는 명령어는?", "answer": "Grant" },
+                    { "exam": "SQL에서 데이터베이스 사용자에게 부여했던 권한을 취소하는 명령어는?", "answer": "Revoke" },
+                    { "exam": "데이터베이스 트랜잭션의 모든 변경사항을 영구적으로 저장하고 작업을 완료하는 명령어는?", "answer": "Commit" },
+                    { "exam": "데이터베이스 트랜잭션 작업 중 문제가 발생했을 때, 마지막 커밋 시점으로 되돌리는 명령어는?", "answer": "Rollback" },
+                    { "exam": "국가나 대륙과 같이 지리적으로 매우 넓은 범위를 연결하는 통신망은?", "answer": "WAN" },
+                    { "exam": "건물이나 특정 지역 등 비교적 좁은 범위 내에서 컴퓨터들을 연결하는 통신망은?", "answer": "LAN" },
+                    { "exam": "컴퓨터를 네트워크에 연결하기 위해 사용되는 하드웨어 장치로, '랜카드'라고도 불리는 것은?", "answer": "NIC" },
+                    { "exam": "OSI 7계층 중 가장 하위 계층으로, 데이터를 전기적인 신호로 변환하여 전송하는 역할을 담당하는 계층은?", "answer": "물리 계층" },
+                    { "exam": "OSI 7계층 중 인접한 노드 간의 신뢰성 있는 데이터 전송을 담당하며, MAC 주소를 사용하는 계층은?", "answer": "데이터 링크 계층" },
+                    { "exam": "OSI 7계층 중 데이터가 목적지까지 갈 수 있는 최적의 경로를 찾아주는 라우팅 기능을 수행하는 계층은?", "answer": "네트워크 계층" },
+                    { "exam": "OSI 7계층 중 종단 간(end-to-end) 신뢰성 있고 정확한 데이터 전송을 담당하며, TCP/UDP가 동작하는 계층은?", "answer": "전송 계층" },
+                    { "exam": "OSI 7계층 중 응용 프로그램 간의 통신을 관리하고 동기화하는 역할을 수행하는 계층은?", "answer": "세션 계층" },
+                    { "exam": "OSI 7계층 중 데이터의 형식을 변환하거나, 데이터를 암호화 및 압축하는 역할을 담당하는 계층은?", "answer": "표현 계층" },
+                    { "exam": "OSI 7계층 중 사용자가 네트워크 자원에 접근할 수 있도록 HTTP, FTP 등과 같은 서비스를 제공하는 최상위 계층은?", "answer": "응용 계층" },
+                    { "exam": "안정성과 멀티태스킹 성능이 뛰어나 서버용으로 많이 사용되는 운영체제 계열은?", "answer": "유닉스, 리눅스" },
+                    { "exam": "사용자가 키보드를 통해 직접 명령어를 입력하여 시스템을 제어하는 인터페이스 방식은?", "answer": "CLI" },
+                    { "exam": "아이콘, 메뉴, 창 등 그래픽 요소를 마우스로 조작하여 시스템을 제어하는 인터페이스 방식은?", "answer": "GUI" }
+                ]
+            },
+            {
+                "chapter": "UI 테스트",
+                "exams": [
+                    { "exam": "전문가 그룹이 경험과 지식에 기반한 사용성 원칙(Heuristics)에 따라 UI가 설계되었는지 평가하는 방법은?", "answer": "휴리스틱 평가" },
+                    { "exam": "종이에 UI 시안을 그려 실제 사용자처럼 테스트하며 빠르게 피드백을 받는 초기 프로토타이핑 평가 방법은?", "answer": "페이퍼 프로토타입 평가" },
+                    { "exam": "두 개 이상의 시안(A/B)을 두고 사용자가 어떤 것을 더 선호하는지 직접 비교하여 평가하는 방법은?", "answer": "선호도 평가" },
+                    { "exam": "사용자가 특정 과업(Task)을 수행하는 과정을 관찰하여 학습성, 효율성, 만족도 등을 측정하는 평가 방법은?", "answer": "성능 평가" },
+                    { "exam": "개발 초기 단계부터 사용자의 요구사항과 경험을 중심에 두고 디자인하는 개발 철학 또는 방법론은?", "answer": "사용자 중심 디자인" },
+                    { "exam": "사용자와 시스템이 상호작용하는 과정과 방식을 설계하여, 직관적이고 효율적인 사용자 경험을 만드는 디자인 분야는?", "answer": "인터랙션 디자인" },
+                    { "exam": "본격적인 개발에 앞서 핵심 기능만 구현하여 사용성 및 기술적 타당성을 검증하기 위해 만드는 초기 시제품은?", "answer": "프로토타입" },
+                    { "exam": "웹이나 앱 화면의 레이아웃과 정보 구조를 시각적으로 단순하게 설계한 청사진을 무엇이라고 하는가?", "answer": "와이어프레임" },
+                    { "exam": "신기술이나 새로운 서비스를 실제 환경에 적용하기 전에, 소규모 그룹을 대상으로 미리 시험해보는 테스트는?", "answer": "파일럿 테스트" },
+                    { "exam": "조사자가 응답자와 1:1로 만나 깊이 있는 질문을 통해 숨겨진 생각이나 요구를 파악하는 정성적 조사 방법은?", "answer": "심층 인터뷰" },
+                    { "exam": "특정 사용자 그룹(6~12명)을 한자리에 모아 특정 주제에 대해 토론하게 하여 다양한 의견을 수집하는 조사 방법은?", "answer": "포커스 그룹 인터뷰" },
+                    { "exam": "소프트웨어가 명시된 요구사항을 얼마나 정확하고 완전하게 만족시키는지를 나타내는 품질 특성은?", "answer": "기능성" },
+                    { "exam": "소프트웨어가 장애 발생 시에도 일정 수준의 성능을 유지하고, 장애 복구가 가능한 능력을 나타내는 품질 특성은?", "answer": "신뢰성" },
+                    { "exam": "사용자가 소프트웨어를 얼마나 쉽게 이해하고 배우고 사용할 수 있는지를 나타내는 품질 특성은?", "answer": "사용성" },
+                    { "exam": "소프트웨어가 특정 조건에서 요구된 성능을 제공하기 위해 자원을 얼마나 효율적으로 사용하는지를 나타내는 품질 특성은?", "answer": "효율성" },
+                    { "exam": "소프트웨어를 다른 운영체제나 하드웨어 환경으로 얼마나 쉽게 옮길 수 있는지를 나타내는 품질 특성은?", "answer": "이식성" },
+                    { "exam": "소프트웨어의 오류를 수정하거나 기능을 개선하기 위해 변경하는 것이 얼마나 용이한지를 나타내는 품질 특성은?", "answer": "유지보수성" }
+                ]
+            },
+            {
+                "chapter": "화면 구현",
+                "exams": [
+                    { "exam": "사용자가 시스템과 상호작용하는 화면, 버튼, 메뉴 등의 시각적 요소를 통칭하는 용어는?", "answer": "UI" },
+                    { "exam": "사용자가 제품이나 서비스를 이용하면서 느끼는 전반적인 경험, 감정, 만족도 등을 의미하는 용어는?", "answer": "UX" },
+                    { "exam": "개발 초기 단계에서 화면의 흐름과 콘텐츠 배치를 시각적으로 설계한 문서로, '화면 설계서'라고도 불리는 것은?", "answer": "스토리보드" },
+                    { "exam": "웹 페이지를 만들 때 따라야 하는 공식적인 기술 표준이나 규칙을 의미하는 용어는?", "answer": "웹 표준" },
+                    { "exam": "장애 여부나 연령에 관계없이 모든 사용자가 웹사이트의 정보에 동등하게 접근할 수 있도록 보장하는 것은?", "answer": "웹 접근성" },
+                    { "exam": "서로 다른 웹 브라우저나 기기 환경에서도 웹사이트가 동등한 기능을 제공하도록 하는 성질은?", "answer": "웹 호환성" },
+                    { "exam": "네트워크를 통해 클라이언트에게 정보나 서비스를 제공하는 컴퓨터 또는 프로그램을 무엇이라고 하는가?", "answer": "서버" },
+                    { "exam": "네트워크를 통해 서버에 접속하여 정보나 서비스를 요청하는 컴퓨터 또는 프로그램을 무엇이라고 하는가?", "answer": "클라이언트" },
+                    { "exam": "HTML 태그 자체가 의미를 가지도록 작성하는 방식으로, `<header>`, `<footer>` 등이 이에 해당하는 것은?", "answer": "시맨틱 태그" },
+                    { "exam": "HTML 문서의 스타일(글꼴, 색상, 레이아웃 등)을 정의하여 웹 페이지 디자인의 일관성을 유지하는 기술은?", "answer": "CSS" },
+                    { "exam": "웹 페이지에 동적인 기능을 추가하고 사용자와의 상호작용을 구현하기 위해 사용하는 스크립트 언어는?", "answer": "JavaScript" },
+                    { "exam": "소프트웨어 테스트에서 상위 모듈부터 하위 모듈 순서로 진행하며, 아직 개발되지 않은 하위 모듈은 '스텁(Stub)'으로 대체하는 방식은?", "answer": "하향식 테스트" },
+                    { "exam": "소프트웨어 테스트에서 하위 모듈부터 상위 모듈 순서로 진행하며, 상위 모듈의 역할을 대신하는 '드라이버(Driver)'가 필요한 방식은?", "answer": "상향식 테스트" }
+                ]
+            },
+            {
+                "chapter": "프로그래밍 언어 활용",
+                "exams": [
+                    { "exam": "컴퓨터 과학에서 데이터의 효율적인 접근 및 수정을 가능하게 하는 데이터의 조직, 관리, 저장을 의미하는 것은?", "answer": "자료구조" },
+                    { "exam": "자료들이 순서를 가지고 일렬로 나열되어 있는 자료구조로, 스택, 큐, 배열 등이 이에 해당하는 것은?", "answer": "선형구조" },
+                    { "exam": "자료들 간의 관계가 계층이나 네트워크 형태를 이루는 자료구조로, 트리, 그래프 등이 이에 해당하는 것은?", "answer": "비선형구조" },
+                    { "exam": "프로그램이 실행되는 동안 데이터를 저장하기 위해 메모리 공간에 붙이는 상징적인 이름은?", "answer": "변수" },
+                    { "exam": "변수, 함수, 클래스 등 프로그램의 구성 요소를 서로 구별하기 위해 사용자가 붙이는 고유한 이름은?", "answer": "식별자" },
+                    { "exam": "변수에 데이터 타입이나 메모리 주소와 같은 속성을 연결하는 과정을 무엇이라고 하는가?", "answer": "바인딩" },
+                    { "exam": "프로그래밍 언어에서 변수의 데이터 타입을 명시적으로 지정하는 것을 무엇이라고 하는가?", "answer": "선언" },
+                    { "exam": "복잡한 문제의 핵심적인 부분만 남기고 불필요한 세부사항을 제거하여 문제를 단순화하는 기법은?", "answer": "추상화" },
+                    { "exam": "객체지향 프로그래밍에서 부모 클래스의 속성과 메서드를 자식 클래스가 물려받아 사용하는 특성은?", "answer": "상속" },
+                    { "exam": "기계가 직접 이해할 수 있는 언어로, 어셈블리어와 기계어가 이에 해당하는 저수준 언어는?", "answer": "저급 언어" },
+                    { "exam": "사람이 이해하기 쉬운 문법으로 작성되어 생산성이 높은 프로그래밍 언어로, C, Java, Python 등이 이에 해당하는 것은?", "answer": "고급 언어" },
+                    { "exam": "프로그램의 실행 순서를 명시적으로 기술하는 방식으로, C언어, Pascal 등이 대표적인 언어는?", "answer": "절차지향 언어" },
+                    { "exam": "데이터와 그 데이터를 처리하는 함수를 '객체'라는 단위로 묶어 프로그램을 설계하는 방식은?", "answer": "객체지향 언어" },
+                    { "exam": "작성된 소스 코드 전체를 기계어로 미리 번역한 후 실행하는 방식으로, 실행 속도가 빠른 특징을 가진 언어는?", "answer": "컴파일 언어" },
+                    { "exam": "소스 코드를 한 줄씩 읽어가며 번역과 실행을 동시에 하는 방식으로, 개발 과정이 편리한 특징을 가진 언어는?", "answer": "인터프리터 언어" },
+                    { "exam": "자주 사용하는 함수나 클래스를 미리 만들어 모아 놓은 것으로, 필요할 때 가져다 쓸 수 있는 코드의 집합은?", "answer": "라이브러리" }
+                ]
+            },
+            {
+                "chapter": "SQL 활용",
+                "exams": [
+                    { "exam": "데이터베이스의 전체적인 구조와 제약조건에 대한 명세를 기술한 것으로, 데이터베이스의 청사진이라고 할 수 있는 것은?", "answer": "스키마" },
+                    { "exam": "하나의 속성(Attribute)이 가질 수 있는 값의 범위를 무엇이라고 하는가?", "answer": "도메인" },
+                    { "exam": "하나 이상의 기본 테이블로부터 유도된, 실제 데이터를 저장하지 않는 가상의 테이블을 무엇이라고 하는가?", "answer": "뷰" },
+                    { "exam": "데이터베이스에서 논리적으로 분리할 수 없는 최소 작업 단위로, 'All or Nothing' 원칙을 따르는 것은?", "answer": "트랜잭션" },
+                    { "exam": "데이터베이스 시스템 자체에 대한 정보, 즉 스키마 정보, 사용자 정보, 제약조건 등을 저장하는 시스템 데이터베이스는?", "answer": "데이터 사전" },
+                    { "exam": "테이블에서 데이터 검색 속도를 향상시키기 위해, 책의 '색인'처럼 사용하는 데이터 구조는?", "answer": "인덱스" },
+                    { "exam": "두 테이블을 조인할 때, 한쪽 테이블에만 데이터가 있어도 해당 행을 결과에 포함시키는 조인 방식은?", "answer": "외부조인" },
+                    { "exam": "SQL에서 조회된 결과를 특정 열(column)의 값을 기준으로 오름차순(ASC) 또는 내림차순(DESC)으로 정렬하는 명령어는?", "answer": "ORDER BY" }
+                ]
+            },
+            {
+                "chapter": "애플리케이션 테스트 수행",
+                "exams": [
+                    { "exam": "소프트웨어 개발 단계에서 가장 작은 단위인 함수나 모듈을 개별적으로 테스트하는 것은?", "answer": "단위 테스트" },
+                    { "exam": "단위 테스트를 통과한 모듈들을 결합하여, 모듈 간의 인터페이스와 상호작용이 정상적으로 이루어지는지 확인하는 테스트는?", "answer": "통합 테스트" },
+                    { "exam": "전체 시스템이 요구사항 명세에 맞게 동작하는지, 성능과 안정성은 확보되었는지 종합적으로 테스트하는 단계는?", "answer": "시스템 테스트" },
+                    { "exam": "소프트웨어를 사용자에게 배포하기 전, 실제 사용 환경에서 최종 사용자가 직접 사용해보며 요구사항을 만족하는지 확인하는 테스트는?", "answer": "인수 테스트" },
+                    { "exam": "테스트 과정에서 발견된 결함(Defect)을 기록, 추적, 수정, 관리하는 전체적인 프로세스를 무엇이라고 하는가?", "answer": "결함 관리" },
+                    { "exam": "소프트웨어 실행 중 발생하는 비정상적인 종료, 응답 시간 지연 등 환경이나 인프라 문제로 인해 발생하는 결함 유형은?", "answer": "시스템 결함" },
+                    { "exam": "사용자 요구사항이 잘못 반영되거나 비즈니스 로직이 부정확하여 발생하는 결함 유형은?", "answer": "기능 결함" },
+                    { "exam": "화면 레이아웃이 깨지거나, 버튼이나 메뉴의 디자인이 일관되지 않는 등 사용자 인터페이스와 관련된 결함 유형은?", "answer": "GUI 결함" },
+                    { "exam": "개발자의 실수나 오해로 인해 프로그램 코드에 포함된 문법적 또는 논리적 문제를 무엇이라고 하는가?", "answer": "오류" },
+                    { "exam": "소프트웨어의 실제 실행 결과가 예상 결과와 다르게 나타나는 현상을 무엇이라고 하는가?", "answer": "실패" }
+                ]
+            },
+            {
+                "chapter": "애플리케이션 테스트 배포",
+                "exams": [
+                    { "exam": "개발된 소프트웨어를 사용자가 접근할 수 있는 실제 운영 환경(서버)으로 이전하고 설정하는 과정을 무엇이라고 하는가?", "answer": "배포" },
+                    { "exam": "HTML, CSS, 이미지 파일과 같은 정적인 콘텐츠를 처리하는 데 특화된 서버 소프트웨어는?", "answer": "웹 서버" },
+                    { "exam": "사용자 요청에 따라 데이터베이스 조회나 비즈니스 로직 수행 등 동적인 콘텐츠를 생성하여 웹 서버에 제공하는 서버 소프트웨어는?", "answer": "WAS" },
+                    { "exam": "자바 클래스 파일, 관련 리소스 및 라이브러리를 하나로 묶어 배포하는 파일 형식은?", "answer": "JAR" },
+                    { "exam": "서블릿, JSP 등 자바 웹 애플리케이션 구성 요소를 압축하여 웹 컨테이너에 배포하는 파일 형식은?", "answer": "WAR" },
+                    { "exam": "소프트웨어 개발 과정에서 발생하는 소스 코드, 문서 등 모든 산출물의 변경 이력을 체계적으로 관리하는 활동은?", "answer": "형상 관리" },
+                    { "exam": "소프트웨어를 실행하지 않고 소스 코드 자체의 오류, 코딩 표준 위반 여부 등을 분석하여 결함을 찾는 정적 분석 도구는?", "answer": "정적 테스트 도구" },
+                    { "exam": "소프트웨어를 직접 실행하여 메모리 누수, 성능 문제, 코드 커버리지 등을 분석하는 테스트 도구는?", "answer": "동적 테스트 도구" }
+                ]
+            }
+        ];
+
+        // --- 상태 관리 ---
+        let currentChapterIndex = null;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentExams = [];
+
+        // --- DOM 요소 ---
+        const chapterSelectionScreen = document.getElementById('chapter-selection-screen');
+        const chapterList = document.getElementById('chapter-list');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const quizHeaderTitle = document.getElementById('quiz-header-title');
+        const progressText = document.getElementById('progress-text');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackText = document.getElementById('feedback-text');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const scoreText = document.getElementById('score-text');
+        const backToChaptersBtn = document.getElementById('back-to-chapters-btn');
+        const restartQuizBtn = document.getElementById('restart-quiz-btn');
+        const goToChaptersBtn = document.getElementById('go-to-chapters-btn');
+        
+        // --- 함수 ---
+
+        /** 모든 화면을 숨기고 단원 선택 화면만 표시 */
+        function showChapterSelection() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            chapterSelectionScreen.classList.remove('hidden');
+        }
+
+        /** 단원 목록을 동적으로 생성 */
+        function populateChapters() {
+            chapterList.innerHTML = '';
+            // 중복 문제 제거 후 데이터 재구성
+            const processedQuizData = quizData.map(chapter => {
+                const uniqueExams = chapter.exams.reduce((acc, current) => {
+                    if (!acc.find(item => item.exam === current.exam)) {
+                        acc.push(current);
+                    }
+                    return acc;
+                }, []);
+                return { ...chapter, exams: uniqueExams };
+            });
+
+            processedQuizData.forEach((chapterData, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'chapter-btn w-full p-6 bg-slate-50 text-left rounded-lg border-2 border-slate-200 hover:border-indigo-400';
+                btn.innerHTML = `<h3 class="text-lg font-bold text-slate-800">${chapterData.chapter}</h3><p class="text-sm text-slate-500">${chapterData.exams.length} 문제</p>`;
+                btn.onclick = () => startQuiz(index, processedQuizData);
+                chapterList.appendChild(btn);
+            });
+        }
+
+        /** 퀴즈 시작 */
+        function startQuiz(chapterIndex, data) {
+            currentChapterIndex = chapterIndex;
+            currentExams = shuffleArray([...data[chapterIndex].exams]);
+            currentQuestionIndex = 0;
+            score = 0;
+
+            chapterSelectionScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            quizHeaderTitle.textContent = data[chapterIndex].chapter;
+            loadQuestion();
+        }
+
+        /** 문제 로드 */
+        function loadQuestion() {
+            // 초기화
+            optionsContainer.innerHTML = '';
+            feedbackText.textContent = '';
+            nextQuestionBtn.classList.add('hidden');
+
+            const questionData = currentExams[currentQuestionIndex];
+            
+            progressText.textContent = `문제 ${currentQuestionIndex + 1} / ${currentExams.length}`;
+            questionText.textContent = questionData.exam;
+
+            // 보기 생성
+            const options = generateOptions(questionData.answer);
+            options.forEach(optionText => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full p-4 bg-white text-left rounded-lg border-slate-300 hover:bg-slate-50';
+                btn.textContent = optionText;
+                btn.onclick = (e) => selectAnswer(e.target, questionData.answer);
+                optionsContainer.appendChild(btn);
+            });
+        }
+        
+        /** 정답을 포함한 보기 4개 생성 (오답은 랜덤 선택) */
+        function generateOptions(correctAnswer) {
+            let options = [correctAnswer];
+            const allAnswers = quizData.flatMap(ch => ch.exams.map(ex => ex.answer));
+            const wrongAnswers = allAnswers.filter(ans => ans !== correctAnswer && ans.length < 25); // 너무 긴 답변은 제외
+            const uniqueWrongAnswers = [...new Set(wrongAnswers)];
+            
+            while (options.length < 4 && uniqueWrongAnswers.length > 0) {
+                const randomIndex = Math.floor(Math.random() * uniqueWrongAnswers.length);
+                options.push(uniqueWrongAnswers.splice(randomIndex, 1)[0]);
+            }
+             // 보기 수가 4개 미만일 경우 채워넣기
+            const dummyOptions = ['데이터', '시스템', '알고리즘', '프로세스'];
+            while(options.length < 4) {
+                const dummy = dummyOptions.find(d => !options.includes(d));
+                if (dummy) {
+                    options.push(dummy);
+                } else {
+                    options.push("기타 옵션"); // 혹시 모를 예외 처리
+                }
+            }
+
+            return shuffleArray(options);
+        }
+        
+        /** 배열 섞기 (Fisher-Yates shuffle) */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /** 답안 선택 시 처리 */
+        function selectAnswer(selectedButton, correctAnswer) {
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                btn.classList.add('disabled'); // 모든 버튼 비활성화
+                if (btn.textContent === correctAnswer) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            if (selectedButton.textContent === correctAnswer) {
+                score++;
+                feedbackText.textContent = '정답입니다! 👍';
+                feedbackText.className = 'text-lg font-bold text-green-600 min-h-[28px]';
+            } else {
+                selectedButton.classList.add('incorrect');
+                feedbackText.innerHTML = `오답입니다. <br>정답: <span class="font-bold">${correctAnswer}</span>`;
+                feedbackText.className = 'text-base text-red-600 min-h-[24px]';
+            }
+            nextQuestionBtn.classList.remove('hidden');
+        }
+
+        /** 결과 화면 표시 */
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            const percentage = currentExams.length > 0 ? Math.round((score / currentExams.length) * 100) : 0;
+            scoreText.innerHTML = `${score} / ${currentExams.length} <span class="text-2xl ml-2">(${percentage}%)</span>`;
+        }
+
+        // --- 이벤트 리스너 ---
+        nextQuestionBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentExams.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        });
+
+        backToChaptersBtn.addEventListener('click', showChapterSelection);
+        goToChaptersBtn.addEventListener('click', showChapterSelection);
+        restartQuizBtn.addEventListener('click', () => {
+            // 수정된 데이터로 다시 퀴즈 시작
+             const processedQuizData = quizData.map(chapter => {
+                const uniqueExams = chapter.exams.reduce((acc, current) => {
+                    if (!acc.find(item => item.exam === current.exam)) {
+                        acc.push(current);
+                    }
+                    return acc;
+                }, []);
+                return { ...chapter, exams: uniqueExams };
+            });
+            startQuiz(currentChapterIndex, processedQuizData);
+        });
+        
+        // --- 초기 실행 ---
+        populateChapters();
+
+    </script>
+</body>
+</html>
