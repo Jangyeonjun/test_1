@@ -619,11 +619,11 @@
 
             if (selectedButton.textContent === correctAnswer) {
                 score++;
-                feedbackText.textContent = '정답입니다! 👍';
+                feedbackText.textContent = '👍';
                 feedbackText.className = 'text-lg font-bold text-green-600 min-h-[28px]';
             } else {
                 selectedButton.classList.add('incorrect');
-                feedbackText.innerHTML = `오답입니다. <br>정답: <span class="font-bold">${correctAnswer}</span>`;
+                feedbackText.innerHTML = `그걸 틀리냐. <br>정답: <span class="font-bold">${correctAnswer}</span>`;
                 feedbackText.className = 'text-base text-red-600 min-h-[24px]';
             }
             nextQuestionBtn.classList.remove('hidden');
